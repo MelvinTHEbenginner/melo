@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Connexion{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-xl-5 col-lg-6 col-md-8">
+        <div class="card shadow-lg border-0 rounded-lg mt-5">
+            <div class="card-header bg-primary text-white text-center py-4">
+                <h3 class="mb-0">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                    Connexion
+                </h3>
+            </div>
+            <div class="card-body p-5">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
+                        <a class="small text-primary" href="{% url 'password_reset' %}">Mot de passe oublié ?</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Se connecter
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center py-3">
+                <div class="small">
+                    <a href="#" class="text-primary">Besoin d'un compte ? Contactez l'administrateur</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

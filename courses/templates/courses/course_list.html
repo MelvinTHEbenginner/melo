@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Liste des Cours{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Filtres par sujet -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-funnel me-2"></i> Filtres</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="h6 mb-3">Sujets</h6>
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'course_list' %}" 
+                           class="list-group-item list-group-item-action {% if not subject %}active{% endif %}">
+                            Tous les sujets
+                            <span class="badge bg-primary float-end">{{ courses.paginator.count }}</span>
+                        </a>
+                        {% for s in subjects %}
+                        <a href="{% url 'course_list_by_subject' s.slug %}" 
+                           class="list-group-item list-group-item-action {% if subject == s %}active{% endif %}">
+                            {{ s.title }}
+                            <span class="badge bg-primary float-end">{{ s.course_count }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des cours -->
+        <div class="col-md-9">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h1 class="h5 mb-0">
+                            {% if subject %}
+                            <i class="bi bi-tag-fill text-primary me-2"></i>{{ subject.title }}
+                            {% else %}
+                            <i class="bi bi-collection-play-fill text-primary me-2"></i>Tous les cours
+                            {% endif %}
+                        </h1>
+                        
+                        <!-- Menu de tri -->
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" 
+                                    id="sortDropdown" data-bs-toggle="dropdown">
+                                <i class="bi bi-sort-down-alt me-1"></i>
+                                {% if current_sort == 'newest' %}Plus récents
+                                {% elif current_sort == 'oldest' %}Plus anciens
+                                {% elif current_sort == 'popular' %}Plus populaires
+                                {% elif current_sort == 'title_asc' %}A-Z
+                                {% elif current_sort == 'title_desc' %}Z-A
+                                {% endif %}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item {% if current_sort == 'newest' %}active{% endif %}" 
+                                       href="?sort=newest{% if subject %}&subject={{ subject.slug }}{% endif %}">
+                                    Plus récents</a></li>
+                                <li><a class="dropdown-item {% if current_sort == 'oldest' %}active{% endif %}" 
+                                       href="?sort=oldest{% if subject %}&subject={{ subject.slug }}{% endif %}">
+                                    Plus anciens</a></li>
+                                <li><a class="dropdown-item {% if current_sort == 'popular' %}active{% endif %}" 
+                                       href="?sort=popular{% if subject %}&subject={{ subject.slug }}{% endif %}">
+                                    Plus populaires</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item {% if current_sort == 'title_asc' %}active{% endif %}" 
+                                       href="?sort=title_asc{% if subject %}&subject={{ subject.slug }}{% endif %}">
+                                    Titre (A-Z)</a></li>
+                                <li><a class="dropdown-item {% if current_sort == 'title_desc' %}active{% endif %}" 
+                                       href="?sort=title_desc{% if subject %}&subject={{ subject.slug }}{% endif %}">
+                                    Titre (Z-A)</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if courses %}
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                {% for course in courses %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        {% if course.image %}
+                        <img src="{{ course.image.url }}" class="card-img-top" alt="{{ course.title }}" style="height: 180px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                            <i class="bi bi-book text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <span class="badge bg-primary mb-2">{{ course.subject.title }}</span>
+                                    <h5 class="card-title">{{ course.title }}</h5>
+                                </div>
+                                {% if course.is_new %}
+                                <span class="badge bg-success">Nouveau</span>
+                                {% endif %}
+                            </div>
+                            <p class="card-text text-muted">{{ course.overview|truncatewords:25 }}</p>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="bi bi-person"></i> {{ course.owner.username }}
+                                    <i class="bi bi-people ms-2"></i> {{ course.students.count }}
+                                </small>
+                                <a href="{% url 'course_detail' course.slug %}" class="btn btn-sm btn-outline-primary">
+                                    Voir <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if subject %}&subject={{ subject.slug }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if subject %}&subject={{ subject.slug }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if subject %}&subject={{ subject.slug }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if subject %}&subject={{ subject.slug }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if subject %}&subject={{ subject.slug }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-emoji-frown display-4 text-muted mb-3"></i>
+                    <h3 class="h5">Aucun cours disponible</h3>
+                    <p class="text-muted">Aucun cours ne correspond à vos critères</p>
+                    <a href="{% url 'course_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-1"></i> Voir tous les cours
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
